@@ -281,6 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Chat Analysis Logic
+    // TODO: 請在此填入您的 Google Gemini API Key，可至 https://aistudio.google.com/app/apikey 申請
+    const GEMINI_API_KEY = '';
+
     const chatInput = document.getElementById('chat-input');
     const analyzeChatBtn = document.getElementById('analyze-chat-btn');
     const clearChatBtn = document.getElementById('clear-chat-btn');
@@ -302,9 +305,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // API Key is now handled securely on the backend server.
-            // No client-side key required.
-            await startChatAnalysis(text, '');
+            // Check if API Key is configured
+            if (!GEMINI_API_KEY) {
+                // If no key, run Mock Analysis for demo purposes
+                // alert('尚未設定 API Key，將切換至模擬演示模式。');
+                await startMockChatAnalysis(text);
+                return;
+            }
+
+            await startChatAnalysis(text, GEMINI_API_KEY);
         });
 
         function resetChatAnalysis() {
@@ -318,6 +327,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>偵測情緒勒索、誘導匯款、假冒身份等詐騙特徵。</p>
                 </div>
             `;
+        }
+
+        // Mock Analysis for Demo (No API Key needed)
+        async function startMockChatAnalysis(text) {
+            chatAnalysisResult.classList.remove('results-mode');
+            chatAnalysisResult.innerHTML = `
+                <div class="result-content">
+                    <div class="loading-spinner"></div>
+                    <h3>正在進行語意分析 (模擬模式)...</h3>
+                    <p>正在分析對話脈絡與潛在威脅</p>
+                </div>
+            `;
+
+            // Simulate delay
+            await new Promise(r => setTimeout(r, 2000));
+
+            // Generate deterministic mock result based on text length or content keywords
+            const isSuspicious = text.includes('匯款') || text.includes('帳戶') || text.includes('凍結') || text.length > 20;
+
+            const mockData = isSuspicious ? {
+                riskScore: 85,
+                riskLevel: "High",
+                category: "Financial Scam",
+                summary: "此對話包含典型詐騙關鍵字，疑似涉及假冒機構誘導匯款或凍結帳戶的詐騙手法。",
+                anomalies: ["提及「帳戶凍結」", "要求「盡快聯繫」製造緊迫感"],
+                recommendations: ["切勿依照指示匯款", "直接撥打官方機構電話查證"]
+            } : {
+                riskScore: 15,
+                riskLevel: "Low",
+                category: "Safe",
+                summary: "對話內容尚屬正常，未發現明顯詐騙特徵。",
+                anomalies: [],
+                recommendations: ["保持警覺即可"]
+            };
+
+            showChatResults(mockData);
         }
 
         async function startChatAnalysis(text, apiKey) {
@@ -342,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <h3>分析失敗</h3>
                         <p>${error.message || '無法連接至 AI 服務，請檢查您的 API Key 或網路連線。'}</p>
-                        <button class="re-scan-btn" onclick="resetChatAnalysis()" style="position: static; transform: none; margin-top: 16px;">重試</button>
+                        <button class="re-scan-btn" onclick="document.getElementById('analyze-chat-btn').click()" style="position: static; transform: none; margin-top: 16px;">重試</button>
                     </div>
                 `;
             }
