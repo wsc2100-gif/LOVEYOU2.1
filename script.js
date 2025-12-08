@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Chat Analysis Logic
     // TODO: 請在此填入您的 Google Gemini API Key，可至 https://aistudio.google.com/app/apikey 申請
-    const GEMINI_API_KEY = '';
+    const GEMINI_API_KEY = 'AIzaSyDg3az32B3uvinRfGtphfU6Dzq9cMk4OVM';
 
     const chatInput = document.getElementById('chat-input');
     const analyzeChatBtn = document.getElementById('analyze-chat-btn');
