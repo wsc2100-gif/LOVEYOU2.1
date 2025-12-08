@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthGuard AI - 洞察 AI 時代的騙局</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <span class="logo-text">TruthGuard</span>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-target="dashboard-view">
+                    <i class="fa-solid fa-house"></i>
+                    <span>首頁儀表板</span>
+                </a>
+                <div class="nav-divider">分析工具</div>
+                <a href="#" class="nav-item" data-target="deepfake-view">
+                    <i class="fa-solid fa-expand"></i>
+                    <span>深偽影像檢測</span>
+                </a>
+                <a href="#" class="nav-item" data-target="chat-view">
+                    <i class="fa-regular fa-message"></i>
+                    <span>詐騙對話分析</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-right">
+                    <span class="device-info"><i class="fa-solid fa-mobile-screen"></i> Device</span>
+                </div>
+            </header>
+
+            <div id="dashboard-view" class="view-section">
+                <div class="hero-section">
+                    <div class="ai-badge">
+                        <i class="fa-solid fa-sparkles"></i> 由 Gemini 2.5 與 3.0 Pro Vision 驅動
+                    </div>
+                    <h1>洞察 <span class="highlight-text">AI 時代</span> 的騙局</h1>
+                    <p class="hero-description">
+                        TruthGuard 使用先進的多模態 AI 來揭露深偽技術並分析對話中的社交工程模式，讓您免受現代詐騙的侵害。
+                    </p>
+                </div>
+
+                <div class="cards-container">
+                    <!-- Deepfake Card -->
+                    <div class="feature-card">
+                        <div class="card-icon-wrapper">
+                            <i class="fa-solid fa-expand"></i>
+                        </div>
+                        <h3>深偽影像檢測</h3>
+                        <p>分析影像中的 AI 生成偽影、換臉痕跡及合成操作。</p>
+                        <a href="#" class="action-link" id="scan-btn-dashboard">開始掃描 <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+
+                    <!-- Chat Analysis Card -->
+                    <div class="feature-card">
+                        <div class="card-icon-wrapper">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <h3>詐騙對話分析</h3>
+                        <p>貼上聊天記錄或郵件，偵測社交工程、緊迫盯人戰術及詐騙腳本。</p>
+                        <a href="#" class="action-link" id="chat-btn-dashboard" data-target="chat-view">分析文字 <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deepfake Detection View -->
+            <div id="deepfake-view" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2>深偽影像與名人驗證</h2>
+                    <p>上傳可疑照片，我們將結合 <span class="link-text">Google 搜尋</span> 比對名人真實性，並深入分析光影物理、環境邏輯與 AI 生成偽影。</p>
+                </div>
+
+                <div class="split-container">
+                    <!-- Upload Area -->
+                    <div class="upload-box" id="drop-area">
+                        <div class="upload-content">
+                            <div class="icon-circle">
+                                <i class="fa-solid fa-upload"></i>
+                            </div>
+                            <h3>點擊上傳或拖放檔案</h3>
+                            <p>支援 JPG, PNG, WEBP</p>
+                            <input type="file" id="file-input" hidden accept="image/*">
+                        </div>
+                    </div>
+
+                    <!-- Analysis Placeholder -->
+                    <div class="analysis-box">
+                        <div class="placeholder-content">
+                            <div class="icon-circle dim">
+                                <i class="fa-solid fa-expand"></i>
+                            </div>
+                            <h3>準備進行 AI 鑑識</h3>
+                            <p>支援名人搜尋比對與特徵物理分析。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h4><i class="fa-solid fa-shield-cat"></i> 多重驗證機制：</h4>
+                    <ul>
+                        <li><i class="fa-solid fa-globe"></i> <strong>網路比對：</strong> 搜尋名人影像來源，確認是否為移花接木的假圖。</li>
+                        <li><i class="fa-regular fa-sun"></i> <strong>物理光影：</strong> 分析臉部光源與背景環境是否一致。</li>
+                        <li><i class="fa-solid fa-fingerprint"></i> <strong>生硬特徵：</strong> 檢測瞳孔反射、牙齒細節與耳部邊緣的 AI 瑕疵。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Chat Analysis View -->
+            <div id="chat-view" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2>詐騙對話與文本分析</h2>
+                    <p>貼上可疑的聊天記錄、電子郵件或簡訊內容。我們的語言模型將識別社交工程攻擊、詐騙話術與潛在威脅。</p>
+                </div>
+
+                <div class="split-container">
+                    <!-- Text Input Area -->
+                    <div class="input-panel">
+                        <div class="panel-header">
+                            <i class="fa-regular fa-comments"></i> 對話內容
+                        </div>
+
+
+
+                        <textarea id="chat-input"
+                            placeholder="請在此貼上完整的對話內容、郵件內文或簡訊...\n\n例如：\n'王先生你好，我是XX銀行的專員，您的帳戶因為涉及洗錢案被凍結了，請盡快與我們聯繫...'"></textarea>
+                        <div class="panel-actions">
+                            <button class="clear-btn" id="clear-chat-btn"><i class="fa-solid fa-trash-can"></i>
+                                清除</button>
+                            <button class="analyze-btn" id="analyze-chat-btn">
+                                <i class="fa-solid fa-magnifying-glass-chart"></i> 進行分析
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Result Area -->
+                    <div class="analysis-box" id="chat-analysis-result">
+                        <div class="placeholder-content">
+                            <div class="icon-circle dim">
+                                <i class="fa-solid fa-radar"></i>
+                            </div>
+                            <h3>AI 語意風險偵測</h3>
+                            <p>偵測情緒勒索、誘導匯款、假冒身份等詐騙特徵。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
