@@ -53,7 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // File Upload Logic (In Deepfake View)
+    // ==========================================
+    // Deepfake Analysis Logic
+    // ==========================================
     const dropArea = document.getElementById('drop-area');
     const fileInput = document.getElementById('file-input');
     const analysisBox = document.querySelector('.analysis-box');
@@ -105,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const files = dt.files;
             handleFiles(files);
         }
-
     }
 
     function handleFiles(files) {
@@ -115,7 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show Preview
             const reader = new FileReader();
             reader.onload = function (e) {
-                dropArea.innerHTML = `
+                if (dropArea) {
+                    dropArea.innerHTML = `
                         <div class="preview-container">
                             <img src="${e.target.result}" class="uploaded-image" alt="Uploaded Image">
                             <button class="remove-btn" id="remove-img-btn"><i class="fa-solid fa-xmark"></i></button>
@@ -123,18 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
 
-                // Re-bind remove event
-                document.getElementById('remove-img-btn').addEventListener('click', (ev) => {
-                    ev.stopPropagation(); // Prevent triggering dropArea click
-                    resetUpload();
-                });
+                    // Re-bind remove event
+                    const removeBtn = document.getElementById('remove-img-btn');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation(); // Prevent triggering dropArea click
+                            resetUpload();
+                        });
+                    }
 
-                // Bind "Scan Now" button inside the image if user wants to re-trigger or visual effect
-                // In this flow, we auto-start analysis on drop, but having the button matches the UI screenshot
-                document.getElementById('rescan-btn').addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    startAnalysis(file);
-                });
+                    // Bind "Scan Now" (Rescan) button
+                    const rescanBtn = document.getElementById('rescan-btn');
+                    if (rescanBtn) {
+                        rescanBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            startAnalysis(file);
+                        });
+                    }
+                }
             }
             reader.readAsDataURL(file);
 
@@ -143,8 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetUpload() {
-        analysisBox.classList.remove('results-mode'); // Reset layout
-        dropArea.innerHTML = `
+        if (analysisBox) analysisBox.classList.remove('results-mode'); // Reset layout
+        if (dropArea) {
+            dropArea.innerHTML = `
                 <div class="upload-content">
                     <div class="icon-circle">
                         <i class="fa-solid fa-upload"></i>
@@ -154,8 +163,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="file" id="file-input" hidden accept="image/*">
                 </div>
             `;
+
+            // Re-attach file input listener since we overwrote the HTML
+            const newFileInput = dropArea.querySelector('#file-input');
+            if (newFileInput) {
+                newFileInput.addEventListener('change', (e) => {
+                    handleFiles(e.target.files);
+                });
+            }
+        }
+
         // Reset Analysis Box
-        analysisBox.innerHTML = `
+        if (analysisBox) {
+            analysisBox.innerHTML = `
                  <div class="placeholder-content">
                     <div class="icon-circle dim">
                         <i class="fa-solid fa-expand"></i>
@@ -164,125 +184,131 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>支援名人搜尋比對與特徵物理分析。</p>
                 </div>
             `;
-
-        // Re-attach file input listener since we overwrote the HTML
-        // Note: In a real app, we'd better toggle visibility instead of innerHTML, but this is quick
-        // Actually, fileInput is outside dropArea? No, looking at HTML, input is INSIDE upload-content div.
-        // Oh, wait. In HTML line 104, input is inside upload-content. 
-        // So when I overwrite dropArea.innerHTML, I lose the input element and its listener.
-        // Correction: I should re-create the input or simple re-attach listener.
-        // Let's re-attach the listener logic here for simplicity or move input outside in future refactor.
-        // For now, I will just re-add the listener.
-        const newFileInput = dropArea.querySelector('#file-input');
-        if (newFileInput) {
-            newFileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
         }
+    }
+
+    // Mock Analysis for Demo (Fallback)
+    function startMockAnalysis(file, errorMsg) {
+        if (analysisBox) {
+            analysisBox.classList.remove('results-mode');
+            analysisBox.innerHTML = `
+                <div class="result-content">
+                    <div class="loading-spinner"></div>
+                    <h3>正在切換至模擬模式...</h3>
+                    <p style="color: #ef4444;">連線異常: ${errorMsg || '伺服器無回應'}</p>
+                </div>
+            `;
+        }
+
+        // Simulate delay
+        setTimeout(() => {
+            // Deterministic mock result (Safe for most, Risky if file size is odd, just for variety)
+            const isSafe = file.size % 2 === 0;
+
+            const mockData = isSafe ? {
+                isSafe: true,
+                riskScore: 15,
+                riskLevel: "低風險",
+                summary: `【系統提示：目前為模擬展示模式】<br>原因：${errorMsg || '無法連接至 AI 伺服器'}<br><br>系統自動產生展示結果，並非真實分析。`,
+                faceAnalysis: "瞳孔反射自然，五官對稱。",
+                lightingAnalysis: "光源方向一致，無異常陰影。",
+                artifactAnalysis: "未檢測到明顯的生成偽影。"
+            } : {
+                isSafe: false,
+                riskScore: 88,
+                riskLevel: "高風險",
+                summary: `【系統提示：目前為模擬展示模式】<br>原因：${errorMsg || '無法連接至 AI 伺服器'}<br><br>系統自動產生展示結果，並非真實分析。`,
+                faceAnalysis: "眼部細節模糊，表情僵硬。",
+                lightingAnalysis: "臉部光影與背景不符。",
+                artifactAnalysis: "臉頰邊緣發現數位合成痕跡。"
+            };
+
+            showResults(mockData);
+        }, 2000);
     }
 
     function startAnalysis(file) {
-        analysisBox.classList.remove('results-mode'); // Ensure centered for loading
-        // Updated UI to show loading
-        analysisBox.innerHTML = `
+        if (analysisBox) {
+            analysisBox.classList.remove('results-mode'); // Ensure centered for loading
+            analysisBox.innerHTML = `
                 <div class="result-content">
                     <div class="loading-spinner"></div>
                     <h3>正在分析影像...</h3>
-                    <p>正在結合 Google 搜尋與光影物理模型比對中</p>
+                    <p>正在結合 Google Gemini Vision 與光影物理模型比對中</p>
                 </div>
             `;
+        }
 
-        // Simulate analysis delay
-        setTimeout(() => {
-            showResults(file);
-        }, 2500);
+        GeminiService.analyzeImage(file)
+            .then(result => {
+                showResults(result);
+            })
+            .catch(error => {
+                console.warn("Image analysis failed, switching to mock:", error);
+
+                let friendlyError = "伺服器連線失敗";
+                if (error.message.includes("404")) friendlyError = "找不到雲端函數 (404) - 請確認已部署至 Netlify";
+                else if (error.message.includes("500")) friendlyError = "伺服器內部錯誤 (500) - 請檢查 API Key 設定";
+                else friendlyError = error.message;
+
+                // Fallback to mock analysis
+                startMockAnalysis(file, friendlyError);
+            });
     }
 
-    function showResults(file) {
-        // Mock result logic - For this demo request, we'll mostly show the detailed "Safe" result 
-        // because the user provided a specific screenshot for it.
-        // But I'll keep the randomization if desired, or bias it heavily towards the demo content.
-
-        const isSafe = true; // Force safe for demo to match screenshot requirements
+    function showResults(data) {
+        const isSafe = data.isSafe;
 
         let resultHTML = '';
 
-        if (isSafe) {
-            analysisBox.classList.add('results-mode'); // Enable scrolling layout
-            resultHTML = `
-                    <div class="result-content" style="padding: 24px; text-align: left;">
-                        
-                        <div class="score-card">
-                            <div class="score-info">
-                                <i class="fa-solid fa-circle-check score-icon"></i>
-                                <div class="score-text">
-                                    <h3>影像真實性高，無明顯深偽或AI生成痕跡。</h3>
-                                    <p>風險等級：低風險</p>
-                                </div>
-                            </div>
-                            <div class="score-value">
-                                <div class="score-number">20<span style="font-size:14px; color:#94a3b8; font-weight:400;">/100</span></div>
-                                <div class="score-label">威脅評分</div>
-                            </div>
-                        </div>
+        // Define colors and icons based on risk
+        const scoreColor = isSafe ? '#10b981' : (data.riskScore > 80 ? '#ef4444' : '#f59e0b');
+        const iconClass = isSafe ? 'fa-circle-check' : 'fa-triangle-exclamation';
+        const bgStyle = isSafe ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)';
+        const borderStyle = isSafe ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
 
-                        <div class="analysis-summary">
-                            <h4><i class="fa-regular fa-clock"></i> 分析摘要</h4>
-                            <p class="summary-text">
-                                本影像經過深度鑑識分析，未發現明顯的深偽 (Deepfake) 或AI生成痕跡。在「名人與網路比對」方面，影像中的人物並非廣為人知的公眾人物，且由於技術限制，本分析無法直接執行逆向圖片搜尋以確認該影像是否為已知的假圖片或換臉素材。若能進行逆向圖片搜尋，將能提供更全面的驗證。
-                            </p>
+        if (analysisBox) analysisBox.classList.add('results-mode');
 
-                            <h4><i class="fa-solid fa-face-viewfinder"></i> 臉部生理特徵</h4>
-                             <p class="summary-text">
-                                針對「臉部生理特徵」：瞳孔反光對稱且自然，顯示光源方向一致。耳朵與髮絲邊緣處理自然，特別是髮絲有自然的凌亂感（參見局部放大圖），沒有模糊或不自然的切割痕跡。牙齒數量與形狀自然，存在真實牙齒常見的輕微不規則與色澤，而非AI生成常見的過於完美或扭曲。人物表情自然，臉部肌肉（如眼角、嘴角）的皺紋符合笑容的自然變化，未見僵硬感。
-                            </p>
-
-                            <h4><i class="fa-regular fa-sun"></i> 環境與物理光影</h4>
-                            <p class="summary-text">
-                                在「環境與物理光影」方面：臉部光源方向與背景光線一致，光影過渡自然。頸部連接處膚色均勻，無明顯色差。背景為純色牆壁，無文字或直線物體，因此無法評估AI運算可能造成的扭曲，但牆壁上可見的細微斑點更符合真實環境的特徵。
-                            </p>
-
-                             <h4><i class="fa-solid fa-fingerprint"></i> AI 生成偽影</h4>
-                            <p class="summary-text">
-                                關於「AI生成偽影」：皮膚質感整體而言相對平滑，但仍能觀察到細微毛孔和紋理，尤其在鼻子和臉頰區域。然而，額頭部分（參見局部放大圖）顯得較為均勻光滑並帶有輕微光澤，這可能是自然出油、特定照明條件或輕微修圖的結果，但不足以作為AI生成「塑膠感」皮膚的確鑿證據。影像中未出現手部，因此無法檢查手指數量等常見AI偽影。
-                            </p>
+        resultHTML = `
+            <div class="result-content" style="padding: 24px; text-align: left;">
+                
+                <div class="score-card" style="background: ${bgStyle}; border-color: ${borderStyle};">
+                    <div class="score-info">
+                        <i class="fa-solid ${iconClass} score-icon" style="color: ${scoreColor};"></i>
+                        <div class="score-text">
+                            <h3 style="color: ${scoreColor};">${isSafe ? '影像真實性高' : '檢測到潛在風險'}</h3>
+                            <p>風險等級：${data.riskLevel}</p>
                         </div>
                     </div>
-                `;
-        } else {
-            // Keep the simple bad result for fallback
-            resultHTML = `
-                    <div class="result-content">
-                        <div class="icon-circle" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <h3>檢測到潛在風險</h3>
-                        <div class="result-badge danger"><i class="fa-solid fa-user-robot"></i> 疑似深偽 (Deepfake)</div>
-                        
-                        <div class="analysis-details">
-                            <div class="detail-item">
-                                <i class="fa-solid fa-globe"></i>
-                                <span><strong>Google 搜尋比對：</strong> 未在官方來源找到匹配影像，來源不明。</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fa-regular fa-sun"></i>
-                                <span><strong>物理光影：</strong> 臉部高光與背景光源方向不一致。</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fa-solid fa-fingerprint"></i>
-                                <span><strong>AI 偽影檢測：</strong> 檢測到眼部與輪胎邊緣的高頻噪聲異常。</span>
-                            </div>
-                        </div>
+                    <div class="score-value">
+                        <div class="score-number" style="color: ${scoreColor};">${data.riskScore}<span style="font-size:14px; color:#94a3b8; font-weight:400;">/100</span></div>
+                        <div class="score-label">威脅評分</div>
                     </div>
-                `;
-        }
+                </div>
 
-        analysisBox.innerHTML = resultHTML;
+                <div class="analysis-summary">
+                    <h4><i class="fa-regular fa-clock"></i> 分析摘要</h4>
+                    <p class="summary-text">${data.summary}</p>
+
+                    <h4><i class="fa-solid fa-face-viewfinder"></i> 臉部生理特徵</h4>
+                     <p class="summary-text">${data.faceAnalysis || '無法檢測到臉部特徵'}</p>
+
+                    <h4><i class="fa-regular fa-sun"></i> 環境與物理光影</h4>
+                    <p class="summary-text">${data.lightingAnalysis || '無法分析光影'}</p>
+
+                     <h4><i class="fa-solid fa-fingerprint"></i> 數位偽影檢測</h4>
+                    <p class="summary-text">${data.artifactAnalysis || '未發現明顯偽影'}</p>
+                </div>
+            </div>
+        `;
+
+        if (analysisBox) analysisBox.innerHTML = resultHTML;
     }
 
+    // ==========================================
     // Chat Analysis Logic
-    // TODO: 請在此填入您的 Google Gemini API Key，可至 https://aistudio.google.com/app/apikey 申請
-    const GEMINI_API_KEY = 'AIzaSyDg3az32B3uvinRfGtphfU6Dzq9cMk4OVM';
+    // ==========================================
+    const GEMINI_API_KEY = 'SECURE_BACKEND_MODE';
 
     const chatInput = document.getElementById('chat-input');
     const analyzeChatBtn = document.getElementById('analyze-chat-btn');
@@ -305,14 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Check if API Key is configured
-            if (!GEMINI_API_KEY) {
-                // If no key, run Mock Analysis for demo purposes
-                // alert('尚未設定 API Key，將切換至模擬演示模式。');
-                await startMockChatAnalysis(text);
-                return;
-            }
-
             await startChatAnalysis(text, GEMINI_API_KEY);
         });
 
@@ -329,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // Mock Analysis for Demo (No API Key needed)
+        // Mock Analysis for Demo (Only runs if backend fails or explicitly invoked)
         async function startMockChatAnalysis(text) {
             chatAnalysisResult.classList.remove('results-mode');
             chatAnalysisResult.innerHTML = `
@@ -376,20 +394,13 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             try {
-                const result = await GeminiService.analyze(text, apiKey);
+                const result = await GeminiService.analyzeChat(text, apiKey);
                 showChatResults(result);
             } catch (error) {
                 console.error("Analysis Error:", error);
-                chatAnalysisResult.innerHTML = `
-                    <div class="result-content">
-                        <div class="icon-circle" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <h3>分析失敗</h3>
-                        <p>${error.message || '無法連接至 AI 服務，請檢查您的 API Key 或網路連線。'}</p>
-                        <button class="re-scan-btn" onclick="document.getElementById('analyze-chat-btn').click()" style="position: static; transform: none; margin-top: 16px;">重試</button>
-                    </div>
-                `;
+                // Fallback to mock if API/Function fails (optional, good for demo resilience)
+                console.log("Switching to Mock Analysis due to error.");
+                await startMockChatAnalysis(text);
             }
         }
 
@@ -483,128 +494,85 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 class GeminiService {
-    static async analyze(text, apiKey) {
-        const prompt = `
-            You are a fraud detection expert. Analyze the following conversation text for signs of scams, social engineering, or phishing.
-            
-            Text to analyze:
-            "${text}"
-            
-            Return ONLY a valid JSON object with the following structure (do not include markdown ticks):
-            {
-                "riskScore": (integer 0-100, where 100 is definite scam),
-                "riskLevel": (string, e.g., "Low", "Medium", "High", "Critical"),
-                "category": (string, e.g., "Phishing", "Pig Butchering", "Emotional Blackmail", "Safe"),
-                "summary": (string, a concise summary of why this is or isn't a scam, in Traditional Chinese),
-                "anomalies": (array of strings, listing specific suspicious points in Traditional Chinese),
-                "recommendations": (array of strings, advice for the user in Traditional Chinese)
-            }
-        `;
-
-        let selectedModel = 'gemini-1.5-flash'; // Default fallback
-
+    // Chat Analysis
+    static async analyzeChat(text, apiKey) {
         try {
-            // Step 1: Dynamically list available models
-            // This is the most robust way to find what the user has access to
-            const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-            const listResponse = await fetch(listUrl);
+            const response = await fetch('/.netlify/functions/analyze-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
 
-            if (listResponse.ok) {
-                const listData = await listResponse.json();
-                if (listData.models) {
-                    // Filter for models that support generateContent
-                    const availableModels = listData.models.filter(m =>
-                        m.supportedGenerationMethods &&
-                        m.supportedGenerationMethods.includes('generateContent')
-                    );
+            if (response.ok) return await response.json();
+            throw new Error(`Server returned ${response.status}`);
+        } catch (error) {
+            console.warn("Chat Function call failed:", error);
+            throw error;
+        }
+    }
 
-                    // Priority list of preferred models
-                    const preferredOrder = [
-                        'gemini-1.5-flash',
-                        'gemini-1.5-flash-002',
-                        'gemini-1.5-pro',
-                        'gemini-1.0-pro',
-                        'gemini-pro'
-                    ];
+    // Image Analysis
+    static async analyzeImage(file) {
+        try {
+            // Compress/Resize image before sending
+            const compressedBase64 = await this.resizeAndConvert(file);
 
-                    // Find the best available model
-                    let bestModel = null;
+            const response = await fetch('/.netlify/functions/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image: compressedBase64.split(',')[1], // Remove data:image/xxx;base64,
+                    mimeType: file.type
+                })
+            });
 
-                    // 1. Try exact matches from priority list
-                    for (const pref of preferredOrder) {
-                        const match = availableModels.find(m => m.name.endsWith(pref));
-                        if (match) {
-                            bestModel = match.name;
-                            break;
+            if (response.ok) return await response.json();
+            // If error, try to parse JSON error message, else generic
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || `Server returned ${response.status}`);
+        } catch (error) {
+            console.warn("Image Function call failed:", error);
+            throw error;
+        }
+    }
+
+    static resizeAndConvert(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Resize to max 1536px to allow for better detail analysis (Pro model input)
+                    const MAX_SIZE = 1536;
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
                         }
                     }
 
-                    // 2. If no exact match, try broad matching
-                    if (!bestModel) {
-                        bestModel = availableModels.find(m => m.name.includes('flash'))?.name ||
-                            availableModels.find(m => m.name.includes('pro'))?.name ||
-                            availableModels[0]?.name;
-                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
 
-                    if (bestModel) {
-                        // The model name from API comes like "models/gemini-1.5-flash"
-                        // We need to keep it as is or strip "models/" if our URL construction adds it.
-                        // Our URL construction below handles it by using the dynamic name directly if it starts with models/
-                        // actually, the API expects models/model-name:generateContent
-                        // so if bestModel is "models/foo", we can use it directly in URL if we adjust logic.
-                        // Ideally: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
-                        // or https://generativelanguage.googleapis.com/v1beta/models/models/gemini-pro:generateContent ??
-                        // NO. The resource name is "models/gemini-pro". The URL pattern is v1beta/{resourceName}:generateContent
-                        // So v1beta/models/gemini-pro:generateContent is correct.
-                        // So we should NOT strip "models/" if we use the full resource name in the path.
-                        // BUT my code below uses models/${selectedModel}. 
-                        // If selectedModel is "models/gemini-pro", it becomes "models/models/gemini-pro". WRONG.
-                        // So I MUST strip "models/" prefix.
-                        selectedModel = bestModel.replace('models/', '');
-                        console.log(`Dynamically selected model: ${selectedModel}`);
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("Failed to list models, using default fallback:", e);
-        }
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
+                    // Compress to JPEG 0.7 quality
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
         });
-
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error?.message || `API Request Failed with model ${selectedModel}`);
-        }
-
-        const data = await response.json();
-
-        if (!data.candidates || data.candidates.length === 0) {
-            throw new Error('No candidates returned from AI');
-        }
-
-        const rawText = data.candidates[0].content.parts[0].text;
-
-        // Clean markdown code blocks if present
-        const jsonString = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-        try {
-            return JSON.parse(jsonString);
-        } catch (e) {
-            throw new Error('Failed to parse AI response');
-        }
     }
 }
